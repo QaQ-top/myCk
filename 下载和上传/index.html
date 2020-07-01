@@ -1,0 +1,187 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-05-30 12:20:46
+ * @LastEditTime: 2020-06-10 20:31:18
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \JavaScript\下载和上传\index.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载和上传</title>
+    <style>
+        #box{
+            background-color: rgb(22, 105, 78);
+            width: 5vw;
+            height: 10vh;
+            clip-path: circle(50%); /*圆形(大小)*/
+            clip-path: ellipse(10% 20% at 10% 20%); /*自定义圆形(宽 高 at 圆心位置x轴 圆心位置y轴)*/
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);/*自定义多边形(第一个点x轴 y轴, 第二个点x轴 y轴, 第三个点x轴 y轴) 点连成线*/
+            clip-path: inset(10% 20% 30% 10% round 20% 5% 50% 0%);/*内置矩形(top right bottom left round 上左 上右 下右 下左)  <边距 round 圆角>*/
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file"  id="file" multiple>
+    <input type="file" id="fileB">
+    <div id="box">
+        
+    </div>
+</body>
+
+</html>
+<script>
+    /**
+     * 创建并下载文件
+     * @param  {String} fileName 文件名
+     * @param  {String} content  文件内容
+     */
+    function createAndDownloadFile(fileName, content) {
+        var aTag = document.createElement('a');
+        var blob = new Blob([content]);
+        aTag.download = fileName;
+        aTag.href = URL.createObjectURL(blob);
+        console.log(aTag, blob)
+        aTag.click();
+        URL.revokeObjectURL(blob);
+    }
+    console.dir(URL)
+    /**
+     * 
+     */
+    class Axios {
+        request(param) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                let url;
+                param.url = this.URL ? this.URL : param.url;
+                if(param.type==='get'){
+                    url = `${param.url}?${this.getParam(param.params)}`
+                }else{
+                    url = param.url;
+                }
+                xhr.open(param.type.toUpperCase(),url,param.sync);
+                xhr.setRequestHeader("Content-Type","application/json;charset=utf-8"); //JSON
+                if(param.type === 'post'){
+                    if(param.dataType==='json'){
+                        xhr.send(JSON.stringify(param.params));
+                    }else{
+                        xhr.send(param.params);
+                    }
+                }else{
+                    xhr.send();
+                } 
+                xhr.onreadystatechange = ()=>{
+                    if((xhr.readyState===4)){
+                        if((xhr.status===200)){
+                            resolve(xhr.response);
+                        }else{
+                            reject();
+                        }
+                        
+                    }
+                }
+            })
+            
+        }
+        getParam(obj){
+            function hd(str,param) {
+                let string = '';
+                for (const key in param) {
+                    if (param.hasOwnProperty(key)) {
+                        string += `${key}=${param[key]}&`
+                    }
+                }
+                return string.replace(/\&$/,'')
+            }
+            return hd`${obj}`
+        }
+    }
+    let axios = new Axios();
+    
+    
+    function reader(fileData) {
+        return new Promise((resolve, reject) => {
+            let reader = new FileReader(); //创建FileReader对象
+            // reader.readAsArrayBuffer(fileData)//转ArrayBuffer
+            reader.readAsBinaryString(fileData)//转二进制
+            // reader.readAsDataURL(fileData);//转base64
+            /*当读取操作成功完成时调用*/
+            reader.onload = function(e) {
+                resolve(this.result)
+            }
+        })
+        
+    }
+
+    file.onchange = async function () {
+        for(let item of [...this.files]) {
+            let {name, size}  = item;
+            let res = await reader(item); //处理文件
+            // createAndDownloadFile(`C:\\Users\\ck\\Desktop\\ckck`,res) //下载文件
+            axios.request({
+                url:'http://127.0.0.1:3000/upload',
+                type:'post',
+                dataType:'json',
+                sync:true,
+                params:{
+                    name,
+                    size,
+                    type:name.split('.')[1],
+                    res:new Uint8Array(res), //ArrayBuffer类型需要转成Uint8Array 才能传递
+                }
+            }).then(res=>{
+                console.log('请求成功')
+                console.log(res)
+            }).catch(res=>{
+                console.error('请求失败')
+            })
+        }
+        
+        
+    }
+
+    /**
+     * 切片上传
+     */
+    fileB.onchange = function () {
+        let {name, size}  = this.files[0],
+            partSize = size / 5,
+            cru = 0;
+            i = 0,
+            partList = [];
+        while(i<5){ //切片
+            partList.push({
+                chunk: this.files[0].slice(cru,cru + partSize), //返回一个新的 Blob 对象，包含了源 Blob 对象中指定范围内的数据
+                filename:`${name.split('.')[0]}-${i}`
+            })
+            cru += partSize;
+            i++;
+        }
+        console.log(partList)
+        partList = partList.map(i=>{
+            let formData = new FormData(); // 将file切片转化成 FormData数据;
+            for (const [key, value] of Object.entries(i)) {
+                formData.append(key, value);
+            }
+            return axios.request({
+                url:'http://127.0.0.1:3000/upload',
+                type:'post',
+                sync:true,
+                params:formData //请求头 "Content-Type","multipart/form-data"
+            })
+        });
+        Promise.all(partList).then(res=>{
+                console.log('请求成功')
+                console.log(res)
+            }).catch(res=>{
+                console.error('请求失败')
+            })
+    }
+
+</script>

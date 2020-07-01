@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Document</title>
+    <style>
+        #box{
+            width: 50%;
+            overflow: hidden;
+            position: relative;
+        }
+        #box>.wrap{
+            width: 100%;
+            display: flex;
+        }
+        #box .swipeList{
+            flex-shrink: 0;
+            width: 100%;
+            height: 100px;
+            text-align: center;
+        }
+        /* #box .child:nth-child(2n){
+            background-color: aquamarine;
+        } */
+        #box .prev,.next,.swipeBtnBox{
+            position: absolute;
+            cursor: pointer;
+        }
+        #box .prev{
+            left: 0;
+            top:50%;
+            transform: translateY(-50%);
+        }
+        #box .next{
+            right: 0;
+            top:50%;
+            transform: translateY(-50%);
+        }
+        #box .swipeBtnBox{
+            display: flex;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+        }
+        #box .swipeBtnBox div{
+            height: 10px;
+            width: 10px;
+            margin: 0 5px;
+            border-radius: 10px;
+            background-color: rgb(107, 107, 107);
+        }
+        #box .a{
+            background-color: blueviolet;
+        }
+        #box .b{
+            background-color: aquamarine;
+        }
+        #box .c{
+            background-color: teal;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+    <div id="box">
+        <div class="wrap">
+            <div class="swipeList child a">
+                <ruby>
+                    <rb>我很帅<rp><rt>wo hen shuai</rt></rp></rb>
+                </ruby>
+            </div>
+            <div class="swipeList child b">
+                <ruby>
+                    <rb>我是谁<rp><rt>wo shi shui</rt></rp></rb>
+                </ruby>
+            </div>
+            <div class="swipeList child c"> 
+                <ruby>
+                    <rb>不知道<rp><rt>bu zhi dao</rt></rp></rb>
+                </ruby>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<!-- <script type="text/javascript" src="index.js"></script> -->
+
+<script>
+    let obj = {
+        el:'#box',
+        previousNext:{
+            type:true,
+        },
+        switchBtn:{
+            type:false,
+        }
+    }
+
+class Swipe {
+    constructor (data) {
+        this.type = false
+        this.el = document.querySelector(data.el)
+        this.rootNode = this.el.firstElementChild;
+        this.setTouchEvent(this.rootNode)
+        this.fragment = document.createDocumentFragment();
+        this.rootChildren = [...this.rootNode.children]
+        this.childrenLength = this.rootChildren.length;
+        this.previousNext = data.previousNext.type;
+        this.switchBtn = data.switchBtn.type;
+        this.swipeBtnBoxArray = null;
+        this.getPrevNextNode ();
+        this.getSwitchBtn ();
+        this.el.appendChild(this.fragment);
+        this.width = this.rootChildren[0].offsetWidth;
+        this.height = this.rootChildren[0].offsetHeight;
+        this.getTime = null;
+        this.index = 0;
+        this.clone()
+    }
+    clone(){ //克隆第一个和最后一个dom，将克隆的第一放到最后一个，将克隆的最后一个放到第一个，（3  1 2 3  1）就像这样
+        let nodeFirst = this.rootChildren[0].cloneNode(true)
+        let nodeLast = this.rootChildren[this.childrenLength-1].cloneNode(true);
+        this.rootNode.insertBefore(nodeLast,this.rootNode.firstElementChild);
+        this.rootNode.appendChild(nodeFirst)
+        this.rootNode.style.transform = `translateX(-${this.width*1}px)`;
+    }
+    getPrevNextNode () { //判断开发人员是否需要 前进后退按钮
+        if(this.previousNext){
+            let prev = document.createElement('div');
+            prev.append('<')
+            prev.classList.add('prev')
+            let next = document.createElement('div');
+            next.append('>')
+            next.classList.add('next')
+            this.fragment.appendChild(prev),this.fragment.appendChild(next);
+            this.setPrevNextClick(prev,next)
+        }
+    }
+    setPrevNextClick(prev,next){ //给前进后退按钮设置点击事件
+        prev.onclick = (ev) => {
+            let e = ev || window.event;
+            e.stopImmediatePropagation()
+            if(this.type) return
+            this.type = true
+            this.index = --this.index;
+            console.log(this.index)
+            this.setDynamically(this.rootNode,this.index)
+        },
+        next.onclick = (ev) => {
+            let e = ev || window.event;
+            e.stopImmediatePropagation()
+            if(this.type) return
+            this.type = true
+            this.index =  ++this.index;
+            console.log(this.index)
+            this.setDynamically(this.rootNode,this.index)
+        }
+    }
+    getSwitchBtn () { // 判断是否需要分页器
+        if(this.switchBtn){
+            let swipeBtnBox = document.createElement('div');
+            swipeBtnBox.classList.add('swipeBtnBox');
+            for(let i = 0;i<this.childrenLength;i++){
+                
+                let div = document.createElement('div');
+                if(i===0) div.style.backgroundColor = 'rgb(67, 67, 245)'
+                div.classList.add('switchBtn');
+                swipeBtnBox.appendChild(div)
+            }
+            this.setSwitchBtnClick (swipeBtnBox);
+            this.fragment.appendChild(swipeBtnBox);
+        }
+    }
+    setSwitchBtnClick (swipeBtnBox) { //给分页器添加点击事件
+        let arr = [...swipeBtnBox.children]
+        this.swipeBtnBoxArray = arr
+        arr.map((item,index)=>{
+            item.onclick = (ev)=>{
+                let e = ev || window.event;
+                e.stopImmediatePropagation()
+                this.setDynamically(this.rootNode,index)
+                this.index = index;
+                this.removeBackground(arr)
+                item.style.backgroundColor = 'rgb(67, 67, 245)'
+            }
+        })
+    }
+    setDynamically(dom,index){ //设置动画效果，当切换到克隆的节点时，消除动画立即返回到相同的原始节点
+        this.rootNode.style.transition = 'all 0.35s';
+        let handle = ()=>{
+                this.type = false
+                dom.style.transition = 'none';
+                dom.style.transform = `translateX(-${this.width*(this.index+1)}px)`;
+                dom.removeEventListener('transitionend', handle, false)
+            }
+        if(this.switchBtn) this.removeBackground(this.swipeBtnBoxArray);
+        switch(true){
+            case index===this.childrenLength:
+                dom.addEventListener('transitionend', handle)
+                dom.style.transform = `translateX(-${this.width*(index+1)}px)`;
+                this.index = 0;
+                if(this.switchBtn) this.swipeBtnBoxArray[this.index].style.backgroundColor = 'rgb(67, 67, 245)';
+                break;
+            case index===-1:
+                dom.addEventListener('transitionend', handle)
+                dom.style.transform = `translateX(-${this.width*(index+1)}px)`;
+                this.index = this.childrenLength-1;
+                if(this.switchBtn) this.swipeBtnBoxArray[this.index].style.backgroundColor = 'rgb(67, 67, 245)';
+                break;
+            default:
+                this.type = false
+                dom.style.transform = `translateX(-${this.width*(index+1)}px)`;
+                if(this.switchBtn) this.swipeBtnBoxArray[index].style.backgroundColor = 'rgb(67, 67, 245)';
+        }
+        
+    }
+    removeBackground(arr){ //清除分页器的背景
+        arr.map(i=>{
+            i.style.backgroundColor = 'rgb(107, 107, 107)'
+        })
+    }
+    setTouchEvent(dom){ //设置鼠标滑动效果
+        dom.onmousedown = (ev)=>{
+            dom.style.transition = 'none';
+            this.type = false;
+            let e = ev || window.event;
+            e.preventDefault() //阻止默认的拖拽事件
+            let type = 0;
+            this.getTime = new Date()
+            let downOffsetX = e.offsetX;
+            let downClientX = e.clientX
+            let translateX = this.width*(this.index+1);
+            let ratio = 0;
+            window.onmousemove = (ev)=>{
+                let e = ev || window.event;
+                if(e.offsetX-downOffsetX>0){
+                    type = -1 //鼠标向右滑动 
+                    dom.style.transform = `translateX(-${translateX-(e.clientX-downClientX)}px)`;
+                }else{
+                    type = 1 //鼠标向左滑动 
+                    dom.style.transform = `translateX(-${translateX-(e.clientX-downClientX)}px)`;
+                }
+
+                ratio = (e.clientX-downClientX)/this.width; //获得滑动距离与内容宽度的比，判断用户滑动了多少格子
+            }
+            window.onmouseup = (ev)=>{
+            dom.style.transition = 'none';
+            window.onmousemove = null;
+            let e = ev || window.event;
+            let upOffsetX = e.offsetX;
+            let date = new Date();
+            if(date-this.getTime<700||Math.abs(downClientX-e.clientX)>((this.width/100)*40)){
+                switch (type) {
+                    case 1:
+                        this.index = Math.abs(ratio)>1?this.index+Math.round(ratio):this.index+1; //如果用户超过半格 使用四舍五入按一格算
+                        this.index = this.index>=this.childrenLength?this.childrenLength:this.index;
+                        this.setDynamically(dom,this.index)
+                        break;
+                    case -1:
+                        this.index = Math.abs(ratio)>1?this.index-Math.round(ratio):this.index-1; //如果用户超过半格 使用四舍五入按一格算
+                        this.index = this.index<=-1?-1:this.index;
+                        this.setDynamically(dom,this.index)
+                        break;
+                }
+            }else{
+                this.setDynamically(dom,this.index)
+            }
+            window.onmouseup = null;
+        }
+        }
+        
+    }
+}
+
+let swipe = new Swipe(obj);
+
+
+let objData = {
+  method: 'post',
+  url: 'http://localhost:3000/commodity',
+  data: {
+    name:'卫衣',
+    price:999
+  }
+}
+
+let axios = (data) => {
+    return new Promise((res,rej)=>{
+        let http = null;
+        if(XMLHttpRequest){
+            http = new XMLHttpRequest()
+        }else{
+            http = new ActiveXObject()
+        }
+        let str = "";
+		if(data.method==='get'||data.method==='GET'){
+            if(data.data) {
+                for (let attr in data.data) {
+                    str += attr + "=" + data.data[attr] + "&"
+                }
+            }
+            str = `?${str}`
+        }
+        http.getResponseHeader({
+            'content-type': 'application/json;charset=UTF-8',
+        })
+        http.open(data.method,data.url+str,true);
+        if(data.method==='post'||data.method==='POST'){
+            console.log(data.data)
+            http.send(JSON.stringify(data.data))
+        }else{
+            http.send()
+        }
+        http.onreadystatechange = () =>{ // onreadystatechange 会在 readyState改变的时候触发，所以得判断readyState是不是到了最后一个阶段，不然JSON.parse会出错
+            if(http.responseText&&http.readyState===4){
+                data = JSON.parse(http.responseText);
+                if(http.status!==200){
+                    rej(data);
+                }else{
+                    res(data);
+                }
+            }
+        }
+    })
+}
+
+axios(objData).then(res=>{
+    console.log(res)
+
+},err=>{
+    console.log(err)
+})
+
+// document.
+
+
+
+
+</script>
+

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+    // function* gen(x) {
+    //     /**
+    //      * @
+    //      */
+    //     console.log('我yield了第一次'+x);
+    //     let a = yield 'a';
+    //     console.log('我yield了第二次'+a);
+    //     let b = yield 'b';
+    //     console.log('我yield了第三次'+b);
+    //     let c = yield 'c';
+    //     console.log('我return了'+c);
+    //     return { a, b, c }
+    // }
+    // let gene = gen('函数参数');
+    // setTimeout(() => {
+    //     console.log(gene.next('ff'));
+    // }, 1000)
+    // setTimeout(() => {
+    //     console.log(gene.next('1000'));
+    // }, 2000)
+    // setTimeout(() => {
+    //     console.log(gene.next('2000'));
+    // }, 3000);
+    // setTimeout(() => {
+    //     console.log(gene.next('3000'))
+    // }, 4000);
+
+    
+    // console.log(arr,Array.apply(null,{length:100}))
+
+    function *Array1_100(x=0) {
+        while(x<100){
+            yield ++x;
+        }
+    }
+    console.log([...Array1_100()])
+
+    function *keys(obj) {
+        for(let attr in obj){
+            yield attr;
+        }
+    }
+    console.log([...keys({
+        'a':1,
+        'b':1,
+        'c':1,
+        'd':1,
+        'e':1,
+    })])
+
+    function *add(x=0) {
+        let order
+        while(true){
+            switch (order) {
+                case 'add':
+                    ++x;
+                    break;
+                case 'sub':
+                    --x;
+                    break;
+            }
+            order = yield x
+        }
+    }
+    let rue = add();rue.next();
+    console.log(rue.next('add'))
+    console.log(rue.next('sub'))
+
+
+    var g = function* () {
+        try {
+            yield 'ff';
+            yield 'aa';
+        } catch (e) {
+            console.log('执行catch');
+            return e;
+            yield 'catch';
+        } finally {
+            console.log('执行finally');
+            yield 'finally';
+            yield 'finally2';
+        }
+    };
+
+    var i = g();
+    console.log(i.next())
+    console.log(i.next())
+    // console.log(i.next())
+    // console.log(i.next())
+    // console.log(i.next())
+    /**
+     * @explain : 
+     *      next() 方法返回一个对象，value 表示yield出来的值，done 表示遍历是否结束（Boolean类型），当yield语句
+     *             执行完毕后，会判断是否使用过return()，将以return()的参数为value值，否则自动停止遍历；如果try
+     *             代码块yield语句执行完，会判断是否有finally代码块，有就执行finally代码块；没有直接结束遍历；
+     * 
+     *      没有执行过next()：
+     *          throw() 直接报错；
+     *          return() 直接结束遍历；
+     * 
+     *      有执行过next()：
+     *          throw() 方法会检测Generator是有catch代码块，如果有将执行catch代码块，仅执行一次，如果已经执行过了，
+     *                  会检测有没有finally代码块，如果有将执行finally代码块，仅执行一次。如果以上描述都不符合，将
+     *                  会报错，如果已经使用了return方法也会报错；
+     *          return() 检测是否有finally代码块，有就直接执行finally代码块，后续的next()这只会执finally里的yield语句
+     *                   如果没有finally代码块，将结束遍历；done为true；value为return()参数；
+     */
+    try {
+        console.log(i.throw('a'))
+        console.log(i.return('b'))
+        // console.log(i.return('c'))
+        // console.log(i.return('d'))
+        // console.log(i.next('e'))
+        // console.log(i.next('e'))
+        // console.log(i.next('e'))
+        // console.log(i.throw('b'))
+        // console.log(i.throw('c'))
+    } catch (e) {
+        console.log('外部捕获', e);
+    }
+
+    let gr = function* (x) {
+        let y = 2 * (yield 5+x); //这里只会执行 (yield 5+x) 返回值为下一次next传入的值 2.5
+        let z = 5 + (yield 5+y); //这里只会执行 (yield 5+y) 返回值为下一次next传入的值 5
+        return x + y + z; // 5 + 5 + 10;
+    }
+    /**
+     * Generator对象第一次使用next无法接收到参数
+     * 使用next的时候 只会运行 yield 前面的代码 
+     * 第二次next传入的产生 相当于 上一次 (yield .....)的返回值
+     */
+    gr = gr(5);
+    console.log(gr.next());
+    console.log(gr.next(2.5));
+    console.log(gr.next(5));
+</script>

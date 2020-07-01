@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" class="throttling" placeholder="节流">
+    <input type="text" class="antiShake" placeholder="防抖">
+</body>
+
+</html>
+<script>
+    /**
+     * 节流
+     */
+    function throttling(fn, num, ...arr) {
+        let time = null;
+        let type = false;
+        return function () {
+            if (type) return;
+            fn.call(this, ...arr);
+            type = true;
+            time = setTimeout(() => {
+                type = false;
+                clearTimeout(time);
+            }, num);
+        }
+    }
+    let inputT = document.querySelector('.throttling')
+    inputT.addEventListener('input', throttling(function () {
+        console.log('输入', this, [...arguments])
+    }, 2000, 1, 2, 3)
+    );
+
+    /**
+     * 防抖
+     */
+    function antiShake(fn, num, ...arr) {
+        let time = null;
+        return function () {
+            clearTimeout(time);
+            time = setTimeout(() => {
+                fn.call(this, ...arr);
+            }, num);
+        }
+    }
+    let inputA = document.querySelector('.antiShake')
+    inputA.addEventListener('input', antiShake(function () {
+        console.log('输入', this, [...arguments])
+    }, 2000, 1, 2, 3)
+    )
+
+
+    let type = Object.prototype.toString.call(document.createNodeIterator) === '[object Function]'
+    if (type) {
+        console.dir(NodeFilter)
+        let target = document.createNodeIterator(
+            document.body,
+            NodeFilter.SHOW_ELEMENT,
+            {
+                acceptNode(node) {
+                    if (node.nodeName === 'INPUT') {
+                        console.log(node)
+                        return NodeFilter.FILTER_ACCEPT;
+                    } else {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                }
+            }
+        );
+        while (target.nextNode()) {
+
+        }
+    }
+
+</script>

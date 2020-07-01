@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="root">
+
+        <div id="box">
+            box
+        </div>
+
+    </div>     
+</body>
+<script type="module"> 
+    import Member from './index.js'
+    import  './main.js'
+    console.log(1)
+    let prom = new Member((resolve, reject) => {
+        // setTimeout(() => {
+            console.log(2)
+            reject(3)
+            console.log(4)
+        // }, 1000);
+    })
+    prom.then(res => {
+        console.log(res)
+        return '成功'
+    },err=>{
+        console.log(err)
+        return new Member((resolve, reject) => {
+            resolve('ffffaaaa')
+        })
+    }).then(res=>{
+        console.log(res)
+        return '字符串'
+    }).then(res=>{
+        console.log(res)
+    })
+
+    console.log(5)
+
+    let p = new Promise(function (resolve, reject) {
+    //    setTimeout(()=>{
+            resolve(3)
+    //    },1000)
+    });
+
+    p.finally(res => {
+    
+    }).then(res => {
+        console.log('真P',res)
+    })
+
+
+
+    // {
+
+    //  let async3 = async function* () {
+    //     while(true){
+    //         //  new Promise(function(resolve, reject) {
+    //         //     reject('错误')
+    //         // });
+    //         yield 'fat'
+    //     }
+    //  }
+    //  let AsyncGenerator = async3()
+
+    // console.log(AsyncGenerator.next())
+
+    // }
+    {
+        // setTimeout(_=>{
+        //     for (var i = 0; i < 5000; i++) {
+        //         console.log('宏任务')
+        //     }
+        // },1000)
+
+        // let prom = new Promise(function(resolve, reject) {
+        //     resolve(5000);
+        // });
+        // prom.then(res=>{
+        //     for (var i = 0; i < res; i++) {
+        //         console.log('微任务')
+        //     }
+        // })
+        // for (var i = 0; i < 10000; i++) {
+        //     console.log('主任务')
+        // }
+    }
+
+</script>
+<script>
+    console.group('异步')
+    {
+        console.log(1)
+        box.onclick = function () {
+            console.log(2)
+        }
+        box.onclick()
+        console.log(3)
+    }
+    window.openDatabase('mySqla', '1.0', 'Test DB', 2 * 1024 * 1024, function(e){
+        console.log(e)
+    })
+    console.groupEnd()
+</script>
+</html>
