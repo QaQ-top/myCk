@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Document</title>
+
+  <style>
+    :root {
+      --color: #ddd;
+    }
+    header {
+      width: 100%;
+      
+    }
+    header > ul {
+      width: 1200px;
+      background-color:aquamarine;
+      margin: 0 auto;
+      display: flex;
+    }
+    header > ul > li {
+      width: 120px;
+      height: 35px;
+      border-right: 1px solid #ddd;
+      background-color: var(--color);
+      text-align: center;
+      line-height: 35px;
+      list-style: none;
+      cursor: pointer;
+      transition: 0.7s linear;
+      animation: ck 1s linear .5s infinite;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+    }
+    @keyframes ck {
+      from {
+        transform: translate(0, 0 ,0);
+      }
+      to {
+        transform: translate(-10px, -10px ,-10px);
+      }
+    }
+    /* 
+      translate()   位移
+      rotate()      旋转 <deg>
+      scale()       缩放
+      skew()        倾斜 <deg>
+
+    */
+    
+    header > ul > li > ul {
+      background-color: chocolate;
+      transition: 0.3s linear;
+      opacity: 0;
+      visibility: hidden;
+      
+      transform: skew(0.5deg);
+    }
+
+    header > ul > li:hover {
+      background-color: cadetblue;
+      
+      
+    }
+    header > ul > li:hover > ul {
+      opacity: 1;
+      visibility: visible;
+      transform: skew(180deg);
+    }
+    
+    header > ul > li:nth-last-child(1) {
+      border: none;
+    }
+
+
+  </style>
+
+</head>
+
+<body style="height:20000px;">
+  <header>
+
+    <ul class="box">
+      <li>一</li>
+      <li>二</li>
+      <li>
+        三
+        <ul>
+          <li>三 -> 一</li>
+          <li>三 -> 二</li>
+          <li>三 -> 三</li>
+        </ul>
+      </li>
+      <li>四</li>
+      <li>五</li>
+    </ul>
+  </header>
+
+</body>
+
+</html>
+<script src="./index.js">
+
+</script>
+
+
+
+

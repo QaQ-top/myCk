@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web components</title>
+    <style>
+        li {
+            text-indent: 10px;
+            border: 1px solid rgb(0, 0, 0);
+            display: block;
+            width: 120px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- >封装 -->
+    <template id="my-element-template" hidden>
+        <style>
+            :host {
+                /** :host 代表attachShadow的容器 **/
+                width: 100px;
+                height: 100px;
+                display: block;
+                background-color: blueviolet;
+            }
+        </style>
+        <div>
+            <p>{{title}}</p>
+            <div>
+                <div>{{list[0]}}</div>
+                <div>{{list[1]}}</div>
+                <div>{{list[2]}}</div>
+            </div>
+        </div>
+    </template>
+    <div>
+        <my-element id="my-element">
+        </my-element>
+        <my-element id="my-element1">
+        </my-element>
+        <my-element id="my-element2">
+        </my-element>
+    </div>
+
+    <user-card></user-card>
+
+    <script>
+        customElements.define('user-card', class extends HTMLElement {
+            connectedCallback() {
+                this.attachShadow({ mode: 'open' });
+                this.shadowRoot.innerHTML = `<p>
+        <button>Click me</button>
+        </p>`;
+                this.shadowRoot.querySelector("p").onclick = e => alert("Inner target: " + e.target.tagName);
+                this.shadowRoot.querySelector("button").onclick = e => alert("Inner target: " + e.target.tagName);
+            }
+        });
+
+        document.onclick = e => alert("Outer target: " + e.target.tagName);
+        document.querySelector("body").onclick = e => alert("Outer target: " + e.target.tagName);
+    /**
+             * 对于 attachShadow来说 内部的元素的事件被触发了：
+             * 会向window冒泡，以attachShadow的父容器为边界
+             * 当冒泡触发父容器外的祖先的事件时 e.target 永远为父容器
+             * 冒泡触发父容器内其他元素的事件时 e.target 永远为点击的那个元素
+             */
+    </script>
+
+
+
+    <input type="range" id="range">
+
+    <div-slot>
+        <!-- 自定义元素使用插槽 -->
+        <li slot="a">A</li>
+        <li slot="b">B</li>
+        <li slot="c">C</li>
+    </div-slot>
+
+    <div class="test">
+        <!-- 普通元素使用插槽 -->
+        <li slot="a">E</li>
+        <li slot="b">F</li>
+        <li slot="c">G</li>
+    </div>
+    <div id="box">
+
+    </div>
+</body>
+
+</html>
+
+
+<template id="div-shadow-template" hidden>
+    <style>
+        slot {
+            text-indent: 10px;
+            border: 1px solid red;
+            display: block;
+            width: 120px;
+        }
+
+        /** 无法给到被插入的元素添加样式 **/
+    </style>
+    <ul>
+        <slot name="a"></slot> <!-- 插槽name是插槽的唯一标识 使用时让元素的slot="插槽name" 具体元素就放入插槽内了 -->
+        <slot name="b"></slot>
+        <slot name="c"></slot>
+    </ul>
+</template>
+<script src="./index.js"></script>
+<script>
+
+    console.time('go')
+    createComponent({
+        name: "my-element", // 元素名称
+        template: "#my-element-template", // 引用的模板
+        data: {},
+        connectedCallback() {
+            // 元素被添加到文档后，浏览器会调用这个方法
+            // console.log('我被添加到了文档内')
+        },
+        disconnectedCallback() {
+            // 元素从文档移除后，浏览器触发这个方法
+            console.log('我被移出了文档')
+        },
+        observedAttributes: [],
+        attributeChangedCallback(key, oldValue, newValue) {
+            console.log("属性发生了改变", key, oldValue, newValue)
+        },
+        adoptedCallback() {
+            // 元素被移动到新的文档的时，会触发这个方法
+            console.log("我被移动到新的文档")
+
+        }
+    })
+    console.log(promiseElement)
+
+    const my_element = promiseElement.get("my-element");
+    my_element.get("my-element").then(res => {
+        console.log(res)
+        res.reinstall({
+            title: "我是帅哥",
+            list: [1, 45, 98]
+        })
+        return my_element.get("my-element1");
+    }).then(res => {
+        res.reinstall({
+            title: "我是美女",
+            list: [1, 36, 12]
+        })
+        return my_element.get("my-element2");
+    }).then(res => {
+        res.reinstall({
+            title: "我是野兽",
+            list: [74, 82, 102]
+        })
+    })
+
+
+    createComponent({
+        name: "div-slot",
+        template: "#div-shadow-template",
+        data: {
+        },
+        connectedCallback() {
+            // 元素被添加到文档后，浏览器会调用这个方法
+            // console.log('我被添加到了文档内')
+        },
+    })
+    // let my = document.querySelector("#my-element")
+    // my
+
+    // let data = my.$data
+    // console.log(promiseElement)
+
+    // let div = my.closest("div")
+    // div.removeChild(my)
+    console.timeEnd('go')
+
+    // const shadow = this.attachShadow({mode: 'open'});
+
+
+
+
+
+    let div = document.querySelector(".test")
+    /**
+     * > attachShadow() 是否可以通过 elem.shadowRoot 访问到 shadow
+     * mode 选项可以设定封装层级。他必须是以下两个值之一：
+     * 「open」 —— shadow root 可以通过 elem.shadowRoot 访问。
+     * 任何代码都可以访问 elem 的 shadow tree。
+     * 「closed」 —— elem.shadowRoot 永远是 null。
+     * 我们只能通过 attachShadow 返回的指针来访问 shadow DOM（并且可能隐藏在一个 class 中）。浏览器原生的 shadow tree，比如 <input type="range">，是封闭的。没有任何方法可以访问它们。
+     */
+    div.attachShadow({
+        mode: "open"
+    })
+
+
+    let t = document.querySelector("#div-shadow-template")
+    div.shadowRoot.appendChild(t.content)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // 解决 异步加载问题
+    function array_asap_solution(x) {
+        let responses = [],
+            displayed = [];
+        for (let i = 0; i < x; i++) {
+            let now = Date.now();
+            xss_rpc_call2(i, function (res) {
+
+                responses[i] = { // 获取数据
+                    res: res,
+                    sent: now
+                };
+                if (i === 0 || displayed[i - 1]) {  // callback 执行时 确保 i === 0 或者 i前面的已经插入  这样达到排序插入
+                    display(i);
+                }
+                /**
+                 * i === 0  确保第一个能够执行 display(i)
+                 * displayed[i-1] 确保前面的已经 执行了display(i)
+                 * 返回其中一个条件 就执行 display(i)
+                 */
+            })
+        }
+        function display(i) {
+
+            display_result('box', i + ',' + responses[i].res);  // 将数据插入页面
+
+            displayed[i] = true; // 标记 i 已经插入
+
+            if (i !== x - 1 && responses[i + 1]) {
+                display(i + 1);
+            }
+            /**
+             * responses[i+1] 如果 i 下个数据已经得到 就执行 display(i+1)
+             */
+        }
+        // 获取循序 5 6 7 2 0 1 3 4 
+        // 总体逻辑 如果 5 已经转化 成了16进制 也执行了传入的callback 但是 不能立马插入到html中 就将数据储存起来array[5] = 0x5
+        // 6 7 2 进行存储
+        // 0 说明是第一个 直接 插入 到html中 然后判断 0的下一个 1 数据是否获得  1没有获得 结束递归
+        // 1 的前面一个 0 已经插入 这里1可以直接插入到html中 然后判断 1的下一个 2 数据是否获得 
+        // 2 获得了 这里2可以直接插入到html中 判断3 数据是否获得  3没有获得 结束递归
+        // 3 前面一个 2 已经插入 3直接插入  判断4是否获得 4没有获得
+        // 4 获得 前面一个 3 已经插入 3直接插入  判断5是否获得 5获得
+        // 5 插入 判断6 6获得
+        // 6 插入 判断7 7获得
+        // 7 插入
+        // 形成排序
+    }
+
+    function display_result(id, text) {
+        var div = document.getElementById(id);
+        var new_div = document.createElement("div");
+        new_div.appendChild(document.createTextNode(text));
+        div.appendChild(new_div);
+    }
+
+    function xss_rpc_call2(n, callback) {
+        var callbackName = "callback" + n + Math.round(Math.random() * 100000); // 创建一个随机name
+
+        window[callbackName] = function (result) { // 创建全局Jsonp函数 result 是接收的16进制
+            var timeout = Math.round(Math.random() * 1000)
+            callback && setTimeout(function () { callback(result); }, timeout); // 随机延迟执行传入的callback
+            delete window[callbackName]
+            //callback && callback(result);
+        }
+
+        /**
+         * n : 数值
+         * callback ：回调函数名称
+         * 接口返回一个 callbackName(n的16进制)
+         */
+        var url = "https://coolshell.cn/t.php?n=" + n + "&callback=" + callbackName;
+
+        jsonp(url, _ => console.log("获取成功")); // jsonp 会在获取到数据后执行 window[callbackName]   并且把后台数据以参数形似传入 window[callbackName]
+
+    }
+    function jsonp(url, callback) {
+        var script_id = null;
+        var script = document.createElement('script');
+        script.setAttribute('type', 'text/javascript');
+        script.setAttribute('src', url);
+        script.setAttribute('id', 'jsonp');
+
+        script.onload = script.onreadystatechange = function () {
+            if ((!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
+                callback && callback(); // 如果 callback为真 执行callback
+            }
+        };
+
+        script_id = document.getElementById('jsonp');
+        if (script_id) { // 判断之前是否插入过 id为jsonp的标签 
+            document.getElementsByTagName('head')[0].removeChild(script_id);
+        }
+        document.getElementsByTagName('head')[0].appendChild(script); // 插入脚本 执行 window[callbackName]
+    }
+</script>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>
+        dsaf
+    </title>
+  <script>
+    customElements.define('test-one',
+      class extends HTMLElement {
+        constructor() {
+          super()
+          console.log(this.textContent)
+        }
+        connectedCallback() {
+            Promise.resolve(this).then(target=>{
+                console.log(target.textContent)
+                // 为什么 获取不到创建的组件textContent
+                console.log(Date.now())
+            })
+        }
+      }
+    )
+  </script>
+</head>
+
+<body>
+    <test-two>Another.</test-two>
+    <test-one>First.</test-one>
+
+
+  <script>
+    customElements.define('test-two',
+      class extends HTMLElement {
+        constructor() {
+          super()
+          console.log(this.textContent)
+          console.log(Date.now())
+        }
+      }
+    )
+  </script>
+</body>
+</html>
